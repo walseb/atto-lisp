@@ -2,7 +2,7 @@
 -- The following is for the ParseList stuff
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances,
              UndecidableInstances, ScopedTypeVariables, OverlappingInstances,
-             CPP, EmptyDataDecls #-}
+             CPP, EmptyDataDecls, FlexibleContexts #-}
 -- | Efficient parsing and serialisation of S-Expressions (as used by Lisp).
 --
 -- This module is intended to be imported qualified, e.g.:
@@ -17,14 +17,14 @@ module Data.AttoLisp
     Failure, Success, Parser,
     parse, parseMaybe, parseEither, typeMismatch,
 
-    ToLisp(..), 
+    ToLisp(..),
 
     -- * Constructors and destructors
     mkStruct,  struct,
 
     -- * Encoding and parsing
     encode, fromLispExpr,
-    
+
     lisp, atom,
   )
 where
@@ -129,6 +129,8 @@ instance Monad Parser where
     {-# INLINE (>>=) #-}
     return a = Parser $ \_kf ks -> ks a
     {-# INLINE return #-}
+
+instance MonadFail Parser where
     fail msg = Parser $ \kf _ks -> kf msg
     {-# INLINE fail #-}
 
@@ -142,7 +144,7 @@ instance Applicative Parser where
     {-# INLINE pure #-}
     (<*>) = apP
     {-# INLINE (<*>) #-}
-    
+
 instance Alternative Parser where
     empty = fail "empty"
     {-# INLINE empty #-}
@@ -196,6 +198,9 @@ instance Monad Result where
     Error err >>= _ = Error err
     {-# INLINE (>>=) #-}
 
+instance MonadFail Result where
+    fail = Error
+
 instance Applicative Result where
     pure  = return
     {-# INLINE pure #-}
@@ -244,9 +249,9 @@ parseEither m v = runParser (m v) Left Right
 {-# INLINE parseEither #-}
 
 --test_parse001 =
---  parseMaybe 
+--  parseMaybe
 
---nth :: [Lisp] -> 
+--nth :: [Lisp] ->
 
 -- | Create a Lisp struct in a standardised format.
 --
@@ -275,9 +280,9 @@ class ToLisp a where
 -- An example type and instance:
 --
 -- @data Coord { x :: Double, y :: Double }
--- 
+--
 -- instance FromLisp Coord where
---   parseLisp ('DotList' [x] y) = pure (Coord x y) 
+--   parseLisp ('DotList' [x] y) = pure (Coord x y)
 --   \-- A non-DotList value is of the wrong shape, so use mzero to fail.
 --   parseLisp _          = 'mzero'
 -- @
@@ -839,7 +844,7 @@ fromLispExpr (String str) = string str
    escape c
         | c < '\x20' = Blaze.fromString $ "\\x" ++ replicate (2 - length h) '0' ++ h
         | otherwise  = fromChar c
-        where h = showHex (fromEnum c) "" 
+        where h = showHex (fromEnum c) ""
 fromLispExpr (Symbol t) = Blaze.fromText t
 fromLispExpr (Number n) = fromNumber n
 fromLispExpr (List []) = Blaze.fromByteString "nil"

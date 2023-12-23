@@ -1,5 +1,6 @@
 name:                   atto-lisp
-version:                0.2.2.3
+version:                0.2.2.4
+x-revision: 2
 license:                BSD3
 license-file:           LICENSE
 author:                 Thomas Schilling <nominolo@googlemail.com>
@@ -18,13 +19,13 @@ extra-source-files:
 library
   build-depends:
     attoparsec,
-    base         >= 4.2     && < 5,
+    base         >= 4.9     && < 4.19,
     blaze-builder,
     blaze-textual,
     bytestring   ,
     containers   ,
     deepseq      ,
-    text          
+    text
 
   exposed-modules:
     Data.AttoLisp
