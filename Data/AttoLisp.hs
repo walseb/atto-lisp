@@ -447,10 +447,9 @@ instance ToLisp () where
   toLisp () = List []
   {-# INLINE toLisp #-}
 
--- Anything mathes ()
 instance FromLisp () where
-  parseLisp _ = pure ()
-  {-# INLINE parseLisp #-}
+  parseLisp e | isNull e = pure ()
+              | otherwise = typeMismatch "()" e
 
 instance ToLisp a => ToLisp (Maybe a) where
   toLisp Nothing = nil
